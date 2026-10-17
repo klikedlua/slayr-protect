@@ -1,0 +1,200 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09090b">
+  <title>Slayr Protect</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-glow"></div>
+    <section class="auth-card">
+      <div class="logo-mark">S<span>.</span></div>
+      <div class="eyebrow">LUAU SECURITY PLATFORM</div>
+      <h1>slayr <span>protect</span></h1>
+      <p class="muted auth-sub">Your scripts. Your control.</p>
+
+      <div class="auth-switch">
+        <button class="selected" data-auth="login">Sign in</button>
+        <button data-auth="register">Create account</button>
+      </div>
+
+      <form id="authForm">
+        <label>Username
+          <input id="authUsername" autocomplete="username" required minlength="3" maxlength="24" placeholder="Enter your username">
+        </label>
+        <label>Password
+          <input id="authPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="Enter your password">
+        </label>
+        <button id="authSubmit" class="btn btn-light btn-wide" type="submit">Sign in <span>→</span></button>
+      </form>
+
+      <p id="authMessage" class="message" role="status"></p>
+      <p class="auth-foot">SECURE ACCESS <span>•</span> SLAYR PROTECT</p>
+    </section>
+  </div>
+
+  <div id="appScreen" class="app-screen hidden">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Slayr Protect home">
+        <div class="logo-mark mini">S<span>.</span></div>
+        <div><b>slayr protect</b><small>LUAU SECURITY</small></div>
+      </a>
+
+      <div class="nav-caption">WORKSPACE</div>
+      <button class="nav-link active" data-page="dashboard"><span class="nav-icon">▦</span>Dashboard</button>
+      <button class="nav-link" data-page="obfuscation"><span class="nav-icon">⌘</span>Obfuscation</button>
+      <button class="nav-link" data-page="settings"><span class="nav-icon">⚙</span>Settings</button>
+
+      <div class="sidebar-bottom">
+        <div class="user-avatar" id="sideAvatar">S</div>
+        <div class="user-info"><b id="sideUsername">username</b><small>Standard account</small></div>
+        <button id="logoutSmall" class="logout-icon" title="Log out">↗</button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div>
+          <div class="crumb">SLAYR PROTECT <span>/</span> <b id="crumbPage">DASHBOARD</b></div>
+          <h2 id="topTitle">Dashboard</h2>
+        </div>
+        <div class="online"><i></i> All systems operational</div>
+      </header>
+
+      <section id="page-dashboard" class="page">
+        <div class="welcome-row">
+          <div>
+            <div class="eyebrow">YOUR WORKSPACE</div>
+            <h1>Welcome back, <span id="welcomeUsername">User</span></h1>
+            <p class="muted">Here's your script protection overview.</p>
+          </div>
+          <button class="btn btn-light" data-goto="obfuscation">＋ New obfuscation</button>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <div class="stat-top"><span>Scripts processed</span><span class="stat-symbol">⌘</span></div>
+            <strong id="statJobs">0</strong><small>Successful jobs</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span>Bytes processed</span><span class="stat-symbol">⇄</span></div>
+            <strong id="statBytes">0 B</strong><small>Total source code submitted</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span>Account status</span><span class="stat-symbol">◈</span></div>
+            <strong class="status-word">Active</strong><small>Account is ready to use</small>
+          </article>
+        </div>
+
+        <article class="panel activity-panel">
+          <div class="panel-heading">
+            <div><h3>Recent activity</h3><p class="muted">Your latest script jobs</p></div>
+            <button class="btn btn-outline btn-sm" data-goto="obfuscation">Open obfuscator ↗</button>
+          </div>
+          <div id="recentJobs" class="jobs-list">
+            <div class="empty-state"><div>⌘</div><b>No scripts processed yet</b><p>Your completed jobs will show up here.</p></div>
+          </div>
+        </article>
+
+        <div class="notice"><span>i</span><p><b>Protection note</b> — this starter performs basic source minification. It does not provide strong anti-reverse-engineering protection.</p></div>
+      </section>
+
+      <section id="page-obfuscation" class="page hidden">
+        <div class="page-intro">
+          <div class="eyebrow">CODE TOOLKIT</div>
+          <h1>Luau obfuscation</h1>
+          <p class="muted">Prepare a script, run the transformer, and export the result.</p>
+        </div>
+
+        <form id="transformForm" class="panel transform-panel">
+          <div class="section-heading"><span class="step">01</span><div><h3>Script details</h3><p class="muted">Give this job a name and optional description.</p></div></div>
+
+          <div class="field-grid">
+            <label>Script name<input id="scriptName" required maxlength="80" placeholder="e.g. MainController"></label>
+            <label>Description <span class="optional">OPTIONAL</span><input id="scriptDescription" maxlength="300" placeholder="What does your script do?"></label>
+          </div>
+
+          <div class="section-heading source-heading"><span class="step">02</span><div><h3>Source code</h3><p class="muted">Paste your code or upload a Luau file.</p></div></div>
+
+          <div class="mode-switch">
+            <button type="button" class="selected" data-mode="paste">⌨ Paste code</button>
+            <button type="button" data-mode="upload">↑ Upload file</button>
+          </div>
+
+          <div id="pastePanel">
+            <label class="code-label">LUAU SOURCE
+              <textarea id="sourceCode" spellcheck="false" rows="13" placeholder="-- Paste your Luau code here&#10;local Players = game:GetService(&quot;Players&quot;)"></textarea>
+            </label>
+            <div class="editor-foot"><span>Luau / Lua</span><span id="charCount">0 characters</span></div>
+          </div>
+
+          <div id="uploadPanel" class="hidden">
+            <label class="upload-box" for="sourceFile">
+              <div class="upload-symbol">↑</div>
+              <b>Choose a .lua or .luau file</b>
+              <span>Click to browse · Maximum 512 KB</span>
+              <input id="sourceFile" type="file" accept=".lua,.luau,text/plain">
+            </label>
+            <p id="fileName" class="muted tiny"></p>
+          </div>
+
+          <div class="transform-actions">
+            <p class="muted tiny">Your original source remains unchanged.</p>
+            <button class="btn btn-light" id="transformButton" type="submit"><span>◇</span> Transform script</button>
+          </div>
+
+          <p id="transformMessage" class="message" role="status"></p>
+
+          <div id="resultPanel" class="result-panel hidden">
+            <div class="panel-heading">
+              <div><h3>Output ready</h3><p id="outputSummary" class="muted"></p></div>
+              <div class="result-actions">
+                <button type="button" id="copyResult" class="btn btn-outline btn-sm">Copy</button>
+                <button type="button" id="downloadResult" class="btn btn-light btn-sm">Download .luau</button>
+              </div>
+            </div>
+            <textarea id="outputCode" rows="13" readonly spellcheck="false"></textarea>
+            <div class="result-warning">Basic minification only — not strong obfuscation.</div>
+          </div>
+        </form>
+      </section>
+
+      <section id="page-settings" class="page hidden">
+        <div class="page-intro">
+          <div class="eyebrow">ACCOUNT MANAGEMENT</div>
+          <h1>Settings</h1>
+          <p class="muted">Manage your account and sign-in security.</p>
+        </div>
+
+        <article class="panel settings-panel">
+          <div class="settings-title"><div class="settings-icon">◎</div><div><h3>Account profile</h3><p class="muted">Your account information</p></div></div>
+          <label>Username<input id="settingsUsername" readonly></label>
+          <p class="muted tiny">Your username is permanent in this version.</p>
+        </article>
+
+        <form id="passwordForm" class="panel settings-panel">
+          <div class="settings-title"><div class="settings-icon">♧</div><div><h3>Change password</h3><p class="muted">Use a strong password with at least 8 characters.</p></div></div>
+          <label>Current password<input id="currentPassword" type="password" autocomplete="current-password" required></label>
+          <label>New password<input id="newPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+          <button class="btn btn-light" type="submit">Update password</button>
+          <p id="passwordMessage" class="message"></p>
+        </form>
+
+        <article class="panel settings-panel signout-panel">
+          <div><h3>Sign out</h3><p class="muted">End your current Slayr Protect session.</p></div>
+          <button id="logoutButton" class="btn btn-outline">Log out ↗</button>
+        </article>
+      </section>
+
+      <footer><span>SLAYR PROTECT</span><span>BUILT FOR LUAU DEVELOPERS</span></footer>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
