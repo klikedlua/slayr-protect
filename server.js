@@ -321,7 +321,7 @@ app.post("/api/obfuscate", requireAuth, (req, res) => {
             },
             profile: result.profile,
             notice: result.profile === "strong"
-                ? `${result.renamedBindings} locals renamed; ${result.encodedStrings} strings and ${result.encodedProperties} property names encoded. Test the output before use.`
+                ? `${result.renamedBindings} locals renamed; ${result.encodedStrings} strings and ${result.encodedProperties} property names use randomized byte-stream encoding with payload checks. The decoder remains reversible and removable. Test the output before use.`
                 : `${result.renamedBindings} local names renamed. Test the output before use.`
         });
     } catch (error) {
