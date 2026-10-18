@@ -100,7 +100,7 @@
           </div>
         </article>
 
-        <div class="notice"><span>i</span><p><b>Protection note</b> — this starter performs basic source minification. It does not provide strong anti-reverse-engineering protection.</p></div>
+        <div class="notice"><span>i</span><p><b>Protection note</b> — source obfuscation raises the effort required to read a script, but it cannot prevent determined reverse engineering. Test obfuscated scripts before release.</p></div>
       </section>
 
       <section id="page-obfuscation" class="page hidden">
@@ -116,6 +116,14 @@
           <div class="field-grid">
             <label>Script name<input id="scriptName" required maxlength="80" placeholder="e.g. MainController"></label>
             <label>Description <span class="optional">OPTIONAL</span><input id="scriptDescription" maxlength="300" placeholder="What does your script do?"></label>
+          </div>
+          <div class="profile-picker">
+            <label for="obfuscationProfile">Obfuscation profile</label>
+            <select id="obfuscationProfile">
+              <option value="standard">Standard — rename local variables</option>
+              <option value="strong">Strong — randomized strings, numbers, properties, and hidden locals</option>
+            </select>
+            <p class="muted tiny">Strong mode encodes strings and numbers throughout the parsed code, including local and return expressions. Output stays valid Luau, but it is still reversible and not fully tamper-proof.</p>
           </div>
 
           <div class="section-heading source-heading"><span class="step">02</span><div><h3>Source code</h3><p class="muted">Paste your code or upload a Luau file.</p></div></div>
@@ -158,7 +166,7 @@
               </div>
             </div>
             <textarea id="outputCode" rows="13" readonly spellcheck="false"></textarea>
-            <div class="result-warning">Basic minification only — not strong obfuscation.</div>
+            <div class="result-warning">Obfuscation is reversible. Review and test the output in your target Luau environment.</div>
           </div>
         </form>
       </section>
