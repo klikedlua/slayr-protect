@@ -370,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
             name,
             description,
             source,
-            profile: "standard"
+            profile: $("obfuscationProfile")?.value || "standard"
           })
         });
 
@@ -378,8 +378,21 @@ document.addEventListener("DOMContentLoaded", () => {
         if ($("outputCode")) $("outputCode").value = data.output;
 
         if ($("outputSummary")) {
-          $("outputSummary").textContent =
-            `${formatBytes(data.stats.inputBytes)} input · ${formatBytes(data.stats.outputBytes)} output`;
+          const summary = [
+            `${formatBytes(data.stats.inputBytes)} input`,
+            `${formatBytes(data.stats.outputBytes)} output`,
+            `${data.stats.renamedBindings} locals renamed`
+          ];
+          if (data.stats.encodedStrings > 0) {
+            summary.push(`${data.stats.encodedStrings} strings encoded`);
+          }
+          if (data.stats.encodedNumbers > 0) {
+            summary.push(`${data.stats.encodedNumbers} numbers encoded`);
+          }
+          if (data.stats.encodedProperties > 0) {
+            summary.push(`${data.stats.encodedProperties} property names encoded`);
+          }
+          $("outputSummary").textContent = summary.join(" · ");
         }
 
         $("resultPanel")?.classList.remove("hidden");
