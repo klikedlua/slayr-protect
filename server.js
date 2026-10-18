@@ -288,9 +288,9 @@ app.post("/api/obfuscate", requireAuth, (req, res) => {
             });
         }
 
-        if (Buffer.byteLength(source, "utf8") > 2 * 1024 * 1024) {
+        if (Buffer.byteLength(source, "utf8") > 1024 * 1024) {
             return res.status(413).json({
-                error: "Source exceeds the 2 MB limit."
+                error: "Source exceeds the 1 MB limit."
             });
         }
 
@@ -314,10 +314,15 @@ app.post("/api/obfuscate", requireAuth, (req, res) => {
             stats: {
                 inputBytes: result.inputBytes,
                 outputBytes: result.outputBytes,
-                savedBytes: result.inputBytes - result.outputBytes
+                savedBytes: result.inputBytes - result.outputBytes,
+                renamedBindings: result.renamedBindings,
+                encodedStrings: result.encodedStrings,
+                encodedProperties: result.encodedProperties
             },
             profile: result.profile,
-            notice: "Lexical minification complete. Test the result before use."
+            notice: result.profile === "strong"
+                ? `${result.renamedBindings} locals renamed; ${result.encodedStrings} strings and ${result.encodedProperties} property names encoded. Test the output before use.`
+                : `${result.renamedBindings} local names renamed. Test the output before use.`
         });
     } catch (error) {
         res.status(400).json({
