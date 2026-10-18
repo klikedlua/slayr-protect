@@ -1,81 +1,260 @@
-
-/* SLAYR PROTECT — ORIGINAL GREEN & BLACK THEME */
+/* SLAYR PROTECT — DARK METALLIC THEME */
 
 :root {
-    --accent: #22c55e;
-    --accent-hover: #16a34a;
-    --accent-dark: #10271a;
-    --accent-border: #245c39;
+  --bg: #070708;
+  --panel: #101012;
+  --panel-2: #151518;
+  --border: #29292e;
+  --text: #f1f1f3;
+  --muted: #85858e;
+  --accent: #e32636;
+  --accent-hover: #ff3445;
+  --silver: #c6c6ce;
 }
 
-/* Keep the original dark surfaces */
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-    background: #09090b;
-    color: #f4f4f5;
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse at 50% -15%, #29292f 0%, transparent 48%),
+    radial-gradient(ellipse at 90% 40%, #190b0e 0%, transparent 35%),
+    var(--bg);
+  color: var(--text);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
 }
 
-/* Primary buttons */
-.btn-light {
-    background: var(--accent);
-    color: #07120a;
-    border: 1px solid var(--accent);
+body {
+  background-attachment: fixed;
 }
 
-.btn-light:hover {
-    background: var(--accent-hover);
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-/* Branding */
-.logo-mark {
-    border-color: var(--accent-border);
-    background: linear-gradient(145deg, #163b25, #101713);
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: #e3263644;
+  color: #fff;
+}
+
+/* Metallic branding */
+
+.logo-mark,
+.brand-mark {
+  background: linear-gradient(145deg, #29292e, #09090b);
+  border: 1px solid #494950;
+  box-shadow:
+    inset 0 1px 0 #ffffff12,
+    0 0 22px #e3263612;
 }
 
 .logo-mark span,
+.brand-name,
 .auth-card h1 span,
 .welcome-row h1 span {
-    color: var(--accent);
+  color: var(--silver);
+  text-shadow: 0 0 18px #ffffff12;
 }
 
-/* Navigation */
-.nav-link:hover,
-.nav-link.active {
-    background: #10271a;
-    border-color: var(--accent-border);
-    color: #ffffff;
+.brand-name strong,
+.logo-mark strong {
+  color: var(--accent);
 }
 
-.nav-icon {
-    color: var(--accent);
+/* Panels and cards */
+
+.auth-card,
+.transform-panel,
+.settings-panel,
+.stat-card,
+.panel,
+.dashboard-card {
+  background: linear-gradient(145deg, #151518, #0c0c0e 75%);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 18px 60px #00000050,
+    inset 0 1px 0 #ffffff06;
+  border-radius: 14px;
+}
+
+.auth-card h1,
+.welcome-row h1 {
+  color: #f4f4f6;
+  letter-spacing: -0.04em;
+}
+
+p,
+.muted,
+.subtitle,
+.description {
+  color: var(--muted);
 }
 
 /* Inputs */
-.auth-card input:focus,
-.transform-panel input:focus,
-.transform-panel textarea:focus,
-.settings-panel input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px #22c55e20;
-    outline: none;
+
+input,
+textarea,
+select {
+  color: var(--text);
+  background: #09090b;
+  border: 1px solid #303036;
+  border-radius: 8px;
 }
 
-/* Upload and status accents */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px #e326361b;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #66666f;
+}
+
+/* Red primary actions */
+
+button,
+.btn-light,
+.btn-primary,
+button[type="submit"] {
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease;
+}
+
+.btn-light,
+.btn-primary,
+button[type="submit"] {
+  background: linear-gradient(135deg, #f02b3c, #a90f20);
+  border: 1px solid #ff4655;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 4px 18px #e3263625;
+}
+
+.btn-light:hover,
+.btn-primary:hover,
+button[type="submit"]:hover {
+  background: linear-gradient(135deg, #ff3c4c, #c71528);
+  box-shadow: 0 0 24px #e3263640;
+  transform: translateY(-1px);
+}
+
+/* Sidebar and navigation */
+
+.sidebar,
+nav {
+  border-color: #252529;
+}
+
+.nav-link {
+  color: #a4a4ad;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: .18s ease;
+}
+
+.nav-link:hover {
+  color: #fff;
+  background: #ffffff08;
+  border-color: #303036;
+}
+
+.nav-link.active {
+  color: #fff;
+  background: linear-gradient(90deg, #e326361b, #e3263605);
+  border-color: #6e222b;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.nav-icon,
+.upload-symbol {
+  color: var(--accent);
+}
+
+/* Upload area */
+
 .upload-box {
-    border-color: #245c39;
+  background: #0a0a0c;
+  border: 1px dashed #45454d;
+  border-radius: 12px;
+  transition: .2s ease;
+}
+
+.upload-box:hover {
+  border-color: var(--accent);
+  background: #e3263608;
 }
 
 .upload-symbol,
 .user-avatar,
 .step {
-    background: #10271a;
-    border-color: #245c39;
-    color: #4ade80;
+  background: #211013;
+  border: 1px solid #63232b;
+  color: #ff5260;
 }
 
-/* Transitions */
-.btn-light,
-.nav-link {
-    transition: background 0.15s ease,
-                border-color 0.15s ease,
-                color 0.15s ease;
+/* Status indicators */
+
+.status-dot {
+  background: var(--accent);
+  box-shadow: 0 0 10px #e32636a0;
+}
+
+hr,
+.divider {
+  border-color: var(--border);
+}
+
+code,
+pre {
+  color: #dedee4;
+  background: #08080a;
+  border: 1px solid #29292e;
+  border-radius: 8px;
+}
+
+/* Scrollbars */
+
+* {
+  scrollbar-color: #45454d #0a0a0c;
+  scrollbar-width: thin;
+}
+
+/* Motion */
+
+@media (prefers-reduced-motion: no-preference) {
+  .auth-card,
+  .transform-panel,
+  .settings-panel {
+    animation: slayr-enter .35s ease both;
+  }
+
+  @keyframes slayr-enter {
+    from {
+      opacity: 0;
+      transform: translateY(7px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
