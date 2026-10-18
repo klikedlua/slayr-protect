@@ -1,3 +1,4 @@
+
 "use strict";
 
 const express = require("express");
@@ -12,6 +13,8 @@ const { transformLuau } = require("./lib/transform");
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
 const isProduction = process.env.NODE_ENV === "production";
+const ADMIN_USERNAME =
+    (process.env.ADMIN_USERNAME || "klikeslua").trim().toLowerCase();
 
 if (isProduction &&
     (!process.env.SESSION_SECRET ||
@@ -93,6 +96,32 @@ function currentUser(req) {
     );
 }
 
+function isAdminUser(user) {
+    return Boolean(
+        user &&
+        typeof user.username === "string" &&
+        user.username.toLowerCase() === ADMIN_USERNAME
+    );
+}
+
+function requireAdmin(req, res, next) {
+    const user = currentUser(req);
+
+    if (!user) {
+        return res.status(401).json({
+            error: "Please log in to continue."
+        });
+    }
+
+    if (!isAdminUser(user)) {
+        return res.status(403).json({
+            error: "Admin access required."
+        });
+    }
+
+    next();
+}
+
 function dashboard(userId) {
     const userJobs = db.jobs.filter(
         job => job.userId === userId
@@ -141,6 +170,12 @@ app.post("/api/register", async (req, res, next) => {
             });
         }
 
+        if (username.toLowerCase() === ADMIN_USERNAME) {
+            return res.status(403).json({
+                error: "That username is reserved for the administrator."
+            });
+        }
+
         if (db.users.some(
             user => user.username.toLowerCase() === username.toLowerCase()
         )) {
@@ -149,11 +184,14 @@ app.post("/api/register", async (req, res, next) => {
             });
         }
 
+        const createdAt = new Date().toISOString();
         const user = {
             id: crypto.randomUUID(),
             username,
             passwordHash: await bcrypt.hash(password, 12),
-            createdAt: new Date().toISOString()
+            createdAt,
+            lastLoginAt: createdAt,
+            loginCount: 1
         };
 
         db.users.push(user);
@@ -166,7 +204,8 @@ app.post("/api/register", async (req, res, next) => {
 
             res.status(201).json({
                 user: {
-                    username: user.username
+                    username: user.username,
+                    isAdmin: isAdminUser(user)
                 }
             });
         });
@@ -204,9 +243,18 @@ app.post("/api/login", async (req, res, next) => {
             req.session.save(saveError => {
                 if (saveError) return next(saveError);
 
+                user.lastLoginAt = new Date().toISOString();
+                user.loginCount = (Number(user.loginCount) || 0) + 1;
+                try {
+                    saveDatabase();
+                } catch (databaseError) {
+                    return next(databaseError);
+                }
+
                 res.json({
                     user: {
-                        username: user.username
+                        username: user.username,
+                        isAdmin: isAdminUser(user)
                     }
                 });
             });
@@ -229,7 +277,8 @@ app.get("/api/me", requireAuth, (req, res) => {
     res.json({
         user: {
             username: user.username,
-            createdAt: user.createdAt
+            createdAt: user.createdAt,
+            isAdmin: isAdminUser(user)
         }
     });
 });
@@ -247,9 +296,84 @@ app.get("/api/dashboard", requireAuth, (req, res) => {
     res.json({
         user: {
             username: user.username,
-            createdAt: user.createdAt
+            createdAt: user.createdAt,
+            isAdmin: isAdminUser(user)
         },
         ...dashboard(user.id)
+    });
+});
+
+// Admin-only account and usage overview. Source code is never included.
+app.get("/api/admin/overview", requireAuth, requireAdmin, (req, res, next) => {
+    const store = req.sessionStore;
+
+    if (!store || typeof store.all !== "function") {
+        return next(new Error("The session store cannot list active sessions."));
+    }
+
+    store.all((error, sessions) => {
+        if (error) return next(error);
+
+        const sessionValues = Array.isArray(sessions)
+            ? sessions
+            : Object.values(sessions || {});
+        const activeUserIds = new Set(
+            sessionValues
+                .map(item => item && item.userId)
+                .filter(userId => typeof userId === "string")
+        );
+        const jobsByUser = new Map();
+        const usersById = new Map(db.users.map(user => [user.id, user]));
+
+        for (const job of db.jobs) {
+            jobsByUser.set(
+                job.userId,
+                (jobsByUser.get(job.userId) || 0) + 1
+            );
+        }
+
+        const users = db.users.map(user => ({
+            username: user.username,
+            createdAt: user.createdAt || null,
+            lastLoginAt: user.lastLoginAt || null,
+            loginCount: Number.isSafeInteger(user.loginCount)
+                ? user.loginCount
+                : 0,
+            obfuscations: jobsByUser.get(user.id) || 0,
+            currentlySignedIn: activeUserIds.has(user.id)
+        })).sort((a, b) =>
+            Number(b.currentlySignedIn) - Number(a.currentlySignedIn) ||
+            b.obfuscations - a.obfuscations ||
+            a.username.localeCompare(b.username)
+        );
+
+        const activeUsers = users.filter(
+            user => user.currentlySignedIn
+        ).length;
+        const totalLogins = users.reduce(
+            (total, user) => total + user.loginCount,
+            0
+        );
+
+        res.json({
+            stats: {
+                totalUsers: users.length,
+                activeUsers,
+                totalLogins,
+                totalObfuscations: db.jobs.length
+            },
+            users: users.map(user => ({
+                ...user,
+                isAdmin: user.username.toLowerCase() === ADMIN_USERNAME
+            })),
+            recentObfuscations: db.jobs.slice(-10).reverse().map(job => ({
+                username: usersById.get(job.userId)?.username || "Unknown user",
+                name: job.name,
+                profile: job.profile || "standard",
+                createdAt: job.createdAt,
+                outputBytes: job.outputBytes
+            }))
+        });
     });
 });
 
@@ -301,6 +425,7 @@ app.post("/api/obfuscate", requireAuth, (req, res) => {
             name,
             description,
             createdAt: new Date().toISOString(),
+            profile: result.profile,
             sourceBytes: result.inputBytes,
             outputBytes: result.outputBytes
         };
@@ -316,12 +441,19 @@ app.post("/api/obfuscate", requireAuth, (req, res) => {
                 savedBytes: result.inputBytes - result.outputBytes,
                 renamedBindings: result.renamedBindings,
                 encodedStrings: result.encodedStrings,
-                encodedProperties: result.encodedProperties
+                encodedNumbers: result.encodedNumbers,
+                encodedProperties: result.encodedProperties,
+                scrambledConditions: result.scrambledConditions,
+                vmInstructions: result.vmInstructions || 0,
+                vmConstants: result.vmConstants || 0,
+                vmFunctions: result.vmFunctions || 0
             },
             profile: result.profile,
-            notice: result.profile === "strong"
-                ? `${result.renamedBindings} locals renamed; ${result.encodedStrings} strings and ${result.encodedProperties} property names use randomized byte-stream encoding with payload checks. The decoder remains reversible and removable. Test the output before use.`
-                : `${result.renamedBindings} local names renamed. Test the output before use.`
+            notice: result.profile === "vm"
+                ? `Offline VM output generated with ${result.vmInstructions} instructions and ${result.vmFunctions} functions. It is self-contained Luau, but supports a defined subset and adds runtime overhead. It remains reversible; test it in the target environment.`
+                : result.profile === "strong"
+                    ? `${result.renamedBindings} locals renamed; ${result.encodedStrings} strings, ${result.encodedNumbers} numbers, and ${result.encodedProperties} property names encoded; ${result.scrambledConditions} conditions scrambled. The output remains reversible. Test it before use.`
+                    : `${result.renamedBindings} local names renamed. Test the output before use.`
         });
     } catch (error) {
         res.status(400).json({
@@ -342,7 +474,8 @@ app.get("/api/settings", requireAuth, (req, res) => {
 
     res.json({
         username: user.username,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        isAdmin: isAdminUser(user)
     });
 });
 
