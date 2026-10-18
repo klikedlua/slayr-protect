@@ -1,17 +1,23 @@
 
-/* SLAYR PROTECT — CRIMSON THEME */
+/* SLAYR PROTECT — ORIGINAL GREEN & BLACK THEME */
 
 :root {
-    --accent: #e11d35;
-    --accent-hover: #f04459;
-    --accent-dark: #351219;
-    --accent-border: #69202b;
+    --accent: #22c55e;
+    --accent-hover: #16a34a;
+    --accent-dark: #10271a;
+    --accent-border: #245c39;
+}
+
+/* Keep the original dark surfaces */
+body {
+    background: #09090b;
+    color: #f4f4f5;
 }
 
 /* Primary buttons */
 .btn-light {
     background: var(--accent);
-    color: #ffffff;
+    color: #07120a;
     border: 1px solid var(--accent);
 }
 
@@ -19,64 +25,57 @@
     background: var(--accent-hover);
 }
 
-/* Logo and branding */
+/* Branding */
 .logo-mark {
     border-color: var(--accent-border);
-    background: linear-gradient(145deg, #42131b, #151519);
+    background: linear-gradient(145deg, #163b25, #101713);
 }
 
 .logo-mark span,
 .auth-card h1 span,
 .welcome-row h1 span {
-    color: #ff5267;
+    color: var(--accent);
 }
 
 /* Navigation */
 .nav-link:hover,
 .nav-link.active {
-    background: #351219;
+    background: #10271a;
     border-color: var(--accent-border);
     color: #ffffff;
 }
 
 .nav-icon {
-    color: #ff5267;
+    color: var(--accent);
 }
 
-/* Form focus states */
+/* Inputs */
 .auth-card input:focus,
 .transform-panel input:focus,
 .transform-panel textarea:focus,
 .settings-panel input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px #e11d351c;
+    box-shadow: 0 0 0 2px #22c55e20;
     outline: none;
 }
 
-/* Upload area */
+/* Upload and status accents */
 .upload-box {
-    border-color: #78303b;
+    border-color: #245c39;
 }
 
 .upload-symbol,
 .user-avatar,
 .step {
-    background: #351219;
-    border-color: var(--accent-border);
-    color: #ff6478;
+    background: #10271a;
+    border-color: #245c39;
+    color: #4ade80;
 }
 
-/* Status indicators */
-.online i {
-    background: var(--accent);
-    box-shadow: 0 0 10px #e11d3577;
-}
-
-/* Smooth transitions */
+/* Transitions */
 .btn-light,
 .nav-link {
-    transition:
-        background 0.15s ease,
-        border-color 0.15s ease,
-        color 0.15s ease;
+    transition: background 0.15s ease,
+                border-color 0.15s ease,
+                color 0.15s ease;
 }
