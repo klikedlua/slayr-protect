@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let authMode = "login";
   let sourceMode = "paste";
   let currentUser = null;
+  let currentIsAdmin = false;
   let lastOutput = "";
   let toastTimer = null;
 
@@ -98,9 +99,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function navigate(page) {
-    const validPages = ["dashboard", "obfuscation", "settings"];
+    const validPages = ["dashboard", "obfuscation", "settings", "admin"];
 
     if (!validPages.includes(page)) page = "dashboard";
+    if (page === "admin" && !currentIsAdmin) page = "dashboard";
 
     document.querySelectorAll(".page").forEach((section) => {
       section.classList.toggle("hidden", section.id !== `page-${page}`);
@@ -113,7 +115,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const titles = {
       dashboard: "Dashboard",
       obfuscation: "Obfuscation",
-      settings: "Settings"
+      settings: "Settings",
+      admin: "ADMIN"
     };
 
     if ($("topTitle")) $("topTitle").textContent = titles[page];
@@ -121,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (page === "dashboard") loadDashboard();
     if (page === "settings") loadSettings();
+    if (page === "admin") loadAdmin();
   }
 
   document.querySelectorAll("[data-page]").forEach((button) => {
@@ -131,8 +135,18 @@ document.addEventListener("DOMContentLoaded", () => {
     button.addEventListener("click", () => navigate(button.dataset.goto));
   });
 
-  function setUser(username) {
-    currentUser = username;
+  function setUser(username, isAdmin = false) {
+    currentUser = username || null;
+    currentIsAdmin = Boolean(isAdmin);
+
+    $("adminNav")?.classList.toggle("hidden", !currentIsAdmin);
+    if ($("sideRole")) {
+      $("sideRole").textContent = currentIsAdmin
+        ? "Administrator"
+        : "Standard account";
+    }
+
+    if (!username) return;
 
     if ($("welcomeUsername")) $("welcomeUsername").textContent = username;
     if ($("sideUsername")) $("sideUsername").textContent = username;
@@ -180,7 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify({ username, password })
         });
 
-        setUser(data.user.username);
+        setUser(data.user.username, data.user.isAdmin);
         authPassword.value = "";
 
         showApp();
@@ -202,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const data = await api("/api/dashboard");
 
-      setUser(data.user.username);
+      setUser(data.user.username, data.user.isAdmin);
 
       if ($("statJobs")) {
         $("statJobs").textContent = data.stats.scriptsObfuscated;
@@ -259,6 +273,118 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function formatDate(value) {
+    if (!value) return "Not recorded";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? "Not recorded"
+      : date.toLocaleString();
+  }
+
+  async function loadAdmin() {
+    if (!currentIsAdmin) return;
+
+    const body = $("adminUsersBody");
+    if (body) {
+      body.replaceChildren();
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 5;
+      cell.className = "admin-empty";
+      cell.textContent = "Loading account activity…";
+      row.append(cell);
+      body.append(row);
+    }
+    showMessage($("adminMessage"), "");
+
+    try {
+      const data = await api("/api/admin/overview");
+      const stats = data.stats || {};
+
+      if ($("adminTotalUsers")) {
+        $("adminTotalUsers").textContent =
+          Number(stats.totalUsers || 0).toLocaleString();
+      }
+      if ($("adminActiveUsers")) {
+        $("adminActiveUsers").textContent =
+          Number(stats.activeUsers || 0).toLocaleString();
+      }
+      if ($("adminTotalObfuscations")) {
+        $("adminTotalObfuscations").textContent =
+          Number(stats.totalObfuscations || 0).toLocaleString();
+      }
+      if ($("adminTotalLogins")) {
+        $("adminTotalLogins").textContent =
+          Number(stats.totalLogins || 0).toLocaleString();
+      }
+
+      if (!body) return;
+      body.replaceChildren();
+
+      if (!Array.isArray(data.users) || data.users.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 5;
+        cell.className = "admin-empty";
+        cell.textContent = "No accounts to show.";
+        row.append(cell);
+        body.append(row);
+        return;
+      }
+
+      for (const user of data.users) {
+        const row = document.createElement("tr");
+        const account = document.createElement("td");
+        account.textContent = user.username || "Unknown";
+
+        if (user.isAdmin) {
+          const badge = document.createElement("span");
+          badge.className = "admin-badge";
+          badge.textContent = "ADMIN";
+          account.append(" ", badge);
+        }
+
+        const sessionCell = document.createElement("td");
+        const status = document.createElement("span");
+        status.className = user.currentlySignedIn
+          ? "admin-status is-active"
+          : "admin-status";
+        status.textContent = user.currentlySignedIn
+          ? "Signed in"
+          : "Signed out";
+        sessionCell.append(status);
+
+        const loginCount = document.createElement("td");
+        loginCount.textContent =
+          Number(user.loginCount || 0).toLocaleString();
+
+        const lastLogin = document.createElement("td");
+        lastLogin.textContent = formatDate(user.lastLoginAt);
+
+        const obfuscations = document.createElement("td");
+        obfuscations.textContent =
+          Number(user.obfuscations || 0).toLocaleString();
+
+        row.append(account, sessionCell, loginCount, lastLogin, obfuscations);
+        body.append(row);
+      }
+    } catch (error) {
+      if (body) {
+        body.replaceChildren();
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 5;
+        cell.className = "admin-empty";
+        cell.textContent = "Could not load account activity.";
+        row.append(cell);
+        body.append(row);
+      }
+      showMessage($("adminMessage"), error.message, true);
+    }
+  }
+
+  $("refreshAdmin")?.addEventListener("click", loadAdmin);
+
   function formatBytes(bytes) {
     if (!Number.isFinite(Number(bytes)) || Number(bytes) <= 0) return "0 B";
 
@@ -308,6 +434,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Luau transformation
   const transformForm = $("transformForm");
+  const profileSelect = $("obfuscationProfile");
+  const profileDescription = $("profileDescription");
+
+  function updateProfileDescription() {
+    if (!profileDescription) return;
+    const descriptions = {
+      standard:
+        "Standard mode renames local bindings. Output is standalone Luau and remains reversible.",
+      strong:
+        "Strong mode also encodes strings and numbers, hides supported properties, and scrambles conditions. Output remains reversible.",
+      vm:
+        "Offline VM emits standalone Luau with encrypted custom bytecode and constants. It supports common locals, functions, tables, calls, branches, and loops; unsupported syntax is rejected. It adds runtime overhead and is still reversible."
+    };
+    profileDescription.textContent =
+      descriptions[profileSelect?.value] || descriptions.standard;
+  }
+
+  profileSelect?.addEventListener("change", updateProfileDescription);
+  updateProfileDescription();
 
   if (transformForm) {
     transformForm.addEventListener("submit", async (event) => {
@@ -380,17 +525,28 @@ document.addEventListener("DOMContentLoaded", () => {
         if ($("outputSummary")) {
           const summary = [
             `${formatBytes(data.stats.inputBytes)} input`,
-            `${formatBytes(data.stats.outputBytes)} output`,
-            `${data.stats.renamedBindings} locals renamed`
+            `${formatBytes(data.stats.outputBytes)} output`
           ];
-          if (data.stats.encodedStrings > 0) {
-            summary.push(`${data.stats.encodedStrings} strings encoded`);
-          }
-          if (data.stats.encodedNumbers > 0) {
-            summary.push(`${data.stats.encodedNumbers} numbers encoded`);
-          }
-          if (data.stats.encodedProperties > 0) {
-            summary.push(`${data.stats.encodedProperties} property names encoded`);
+          if (data.profile === "vm") {
+            summary.push(
+              `${data.stats.vmInstructions} VM instructions`,
+              `${data.stats.vmFunctions} functions`,
+              `${data.stats.vmConstants} encrypted constants`
+            );
+          } else {
+            summary.push(`${data.stats.renamedBindings} locals renamed`);
+            if (data.stats.encodedStrings > 0) {
+              summary.push(`${data.stats.encodedStrings} strings encoded`);
+            }
+            if (data.stats.encodedNumbers > 0) {
+              summary.push(`${data.stats.encodedNumbers} numbers encoded`);
+            }
+            if (data.stats.encodedProperties > 0) {
+              summary.push(`${data.stats.encodedProperties} property names encoded`);
+            }
+            if (data.stats.scrambledConditions > 0) {
+              summary.push(`${data.stats.scrambledConditions} conditions scrambled`);
+            }
           }
           $("outputSummary").textContent = summary.join(" · ");
         }
@@ -470,7 +626,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadSettings() {
     try {
       const data = await api("/api/settings");
-      setUser(data.username);
+      setUser(data.username, data.isAdmin);
     } catch (error) {
       showMessage($("passwordMessage"), error.message, true);
     }
@@ -494,7 +650,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    currentUser = null;
+    setUser("", false);
     lastOutput = "";
 
     if (authForm) authForm.reset();
@@ -511,7 +667,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function initialize() {
     try {
       const data = await api("/api/me");
-      setUser(data.user.username);
+      setUser(data.user.username, data.user.isAdmin);
       showApp();
       navigate("dashboard");
     } catch {
