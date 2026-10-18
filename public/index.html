@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -47,10 +48,11 @@
       <button class="nav-link active" data-page="dashboard"><span class="nav-icon">▦</span>Dashboard</button>
       <button class="nav-link" data-page="obfuscation"><span class="nav-icon">⌘</span>Obfuscation</button>
       <button class="nav-link" data-page="settings"><span class="nav-icon">⚙</span>Settings</button>
+      <button id="adminNav" class="nav-link hidden" data-page="admin"><span class="nav-icon">◆</span>ADMIN</button>
 
       <div class="sidebar-bottom">
         <div class="user-avatar" id="sideAvatar">S</div>
-        <div class="user-info"><b id="sideUsername">username</b><small>Standard account</small></div>
+        <div class="user-info"><b id="sideUsername">username</b><small id="sideRole">Standard account</small></div>
         <button id="logoutSmall" class="logout-icon" title="Log out">↗</button>
       </div>
     </aside>
@@ -120,9 +122,10 @@
             <label for="obfuscationProfile">Obfuscation profile</label>
             <select id="obfuscationProfile">
               <option value="standard">Standard — rename local variables</option>
-              <option value="strong">Strong — randomized strings, numbers, properties, and hidden locals</option>
+              <option value="strong">Strong — strings, numbers, properties, hidden locals, and scrambled conditions</option>
+              <option value="vm">Offline VM — encrypted bytecode, self-contained Luau output</option>
             </select>
-            <p class="muted tiny">Strong mode encodes strings and numbers throughout the parsed code, including local and return expressions. Output stays valid Luau, but it is still reversible and not fully tamper-proof.</p>
+            <p id="profileDescription" class="muted tiny">Strong mode encodes strings and numbers, renames local bindings, and scrambles branch/loop conditions. Output stays valid Luau, but it is still reversible and not fully tamper-proof.</p>
           </div>
 
           <div class="section-heading source-heading"><span class="step">02</span><div><h3>Source code</h3><p class="muted">Paste your code or upload a Luau file.</p></div></div>
@@ -194,6 +197,60 @@
         <article class="panel settings-panel signout-panel">
           <div><h3>Sign out</h3><p class="muted">End your current Slayr Protect session.</p></div>
           <button id="logoutButton" class="btn btn-outline">Log out ↗</button>
+        </article>
+      </section>
+
+      <section id="page-admin" class="page hidden">
+        <div class="page-intro">
+          <div class="eyebrow">RESTRICTED AREA</div>
+          <h1>Admin</h1>
+          <p class="muted">Account sign-ins and successful obfuscation usage. Source code is not shown here.</p>
+        </div>
+
+        <div class="stats-grid admin-stats">
+          <article class="stat-card">
+            <div class="stat-top"><span>Accounts</span><span class="stat-symbol">◎</span></div>
+            <strong id="adminTotalUsers">0</strong><small>Registered users</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span>Signed in</span><span class="stat-symbol">●</span></div>
+            <strong id="adminActiveUsers">0</strong><small>Users with active sessions</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span>Obfuscations</span><span class="stat-symbol">⌘</span></div>
+            <strong id="adminTotalObfuscations">0</strong><small>Successful jobs recorded</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span>Sign-ins</span><span class="stat-symbol">↗</span></div>
+            <strong id="adminTotalLogins">0</strong><small>Tracked from this update onward</small>
+          </article>
+        </div>
+
+        <article class="panel admin-table-panel">
+          <div class="panel-heading">
+            <div>
+              <h3>User activity</h3>
+              <p class="muted">Active sessions, sign-in history, and obfuscation totals by account.</p>
+            </div>
+            <button id="refreshAdmin" class="btn btn-outline btn-sm" type="button">Refresh</button>
+          </div>
+          <div class="admin-table-scroll">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Account</th>
+                  <th>Session</th>
+                  <th>Sign-ins</th>
+                  <th>Last sign-in</th>
+                  <th>Obfuscations</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersBody">
+                <tr><td colspan="5" class="admin-empty">Loading account activity…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p id="adminMessage" class="message" role="status"></p>
         </article>
       </section>
 
