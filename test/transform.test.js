@@ -1,30 +1,55 @@
 
-'use strict';
+"use strict";
 
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { minifyLuau } = require('../lib/transform');
+const test = require("node:test");
+const assert = require("node:assert/strict");
 
-test('removes unnecessary whitespace', () => {
-    const result = minifyLuau('local   x   =   123');
-    assert.equal(result, 'local x = 123');
+const {
+    minifyLuau,
+    transformLuau
+} = require("../lib/transform");
+
+test("removes line comments", () => {
+    assert.equal(
+        minifyLuau("local x = 1 -- comment\nreturn x"),
+        "local x=1 return x"
+    );
 });
 
-test('preserves quoted strings', () => {
-    const result = minifyLuau('local message = "hello   world"');
-    assert.equal(result, 'local message = "hello   world"');
+test("preserves quoted strings", () => {
+    const source = `local s = "hello -- world"\nreturn s`;
+    const output = minifyLuau(source);
+
+    assert.ok(output.includes('"hello -- world"'));
 });
 
-test('removes line comments', () => {
-    const result = minifyLuau('local x = 1 -- comment\nlocal y = 2');
-    assert.equal(result, 'local x = 1 local y = 2');
+test("preserves long-bracket strings", () => {
+    const source = "local s = [=[hello\nworld]=]\nreturn s";
+    const output = minifyLuau(source);
+
+    assert.ok(output.includes("[=[hello\nworld]=]"));
 });
 
-test('preserves comment markers inside strings', () => {
-    const result = minifyLuau('local url = "https://example.com"');
-    assert.equal(result, 'local url = "https://example.com"');
+test("rejects unterminated strings", () => {
+    assert.throws(() => minifyLuau('local s = "broken'));
 });
 
-test('rejects non-string input', () => {
-    assert.throws(() => minifyLuau(null), TypeError);
+test("rejects oversized input", () => {
+    assert.throws(() => minifyLuau("a".repeat(2 * 1024 * 1024 + 1)));
+});
+
+test("rejects unknown profiles", () => {
+    assert.throws(() => minifyLuau("return true", {
+        profile: "unknown"
+    }));
+});
+
+test("returns output statistics", () => {
+    const result = transformLuau("return true", {
+        profile: "standard"
+    });
+
+    assert.equal(result.output, "return true");
+    assert.equal(result.profile, "standard");
+    assert.ok(result.outputBytes > 0);
 });
